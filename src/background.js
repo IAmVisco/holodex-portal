@@ -6,8 +6,8 @@ const MESSAGE = {
   TOKEN: 'token',
   FAVORITES: 'favorites',
 };
-const siteUrl = 'https://holodex.net/';
-const apiUrl = `${siteUrl}api/v2`;
+const holodexUrl = 'https://holodex.net';
+const apiUrl = `${holodexUrl}api/v2`;
 
 const cacheFavorites = async (token) => {
   const response = await fetch(`${apiUrl}/users/favorites`, {
@@ -17,7 +17,7 @@ const cacheFavorites = async (token) => {
   if (response.ok) {
     const json = await response.json();
     const favorites = json.map((f) => f.id);
-    chrome.storage.local.set({ favorites });
+    await chrome.storage.local.set({ favorites });
     await updateBadge(token);
   }
 };
@@ -37,7 +37,7 @@ const updateBadge = async (token) => {
 chrome.action.onClicked.addListener(async (tab) => {
   const newTab = 'chrome://newtab/';
 
-  if (tab.url.includes(siteUrl)) {
+  if (tab.url.includes(holodexUrl)) {
     return;
   }
 
@@ -46,9 +46,25 @@ chrome.action.onClicked.addListener(async (tab) => {
   const ytVideoId = params.get('v');
 
   if (ytVideoId || tab.url === newTab) {
-    chrome.tabs.update(tab.id, { url: ytVideoId ? `${siteUrl}multiview/AATY${ytVideoId}` : siteUrl });
+    chrome.tabs.update(tab.id, { url: ytVideoId ? `${holodexUrl}/multiview/AATY${ytVideoId}` : holodexUrl });
   } else {
-    chrome.tabs.create({ url: siteUrl });
+    chrome.tabs.sendMessage(tab.id, { action: 'getCanonicalLink' }, (response) => {
+      if (chrome.runtime.lastError) {
+        console.error('Error sending message:', JSON.stringify(chrome.runtime.lastError));
+        chrome.tabs.create({ url: holodexUrl });
+        return;
+      }
+
+      if (response?.canonicalUrl) {
+        const url = new URL(response.canonicalUrl);
+        const channelId = url.pathname.split('/').at(-1);
+
+        const channelUrl = channelId && channelId.startsWith('UC') ? `${holodexUrl}/channel/${channelId}` : holodexUrl;
+        chrome.tabs.update({ url: channelUrl });
+      } else {
+        chrome.tabs.create({ url: holodexUrl });
+      }
+    });
   }
 });
 

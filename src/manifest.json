@@ -1,10 +1,17 @@
 {
   "name": "Holodex Portal",
-  "version": "1.1.2",
-  "description": "Quickly jump from current YouTube video to Holodex website!",
+  "version": "1.2.0",
+  "description": "Quickly jump from current YouTube video or channel to Holodex website!",
   "manifest_version": 3,
 
-  "permissions": ["activeTab", "storage", "alarms"],
+  "permissions": ["activeTab", "storage", "alarms", "nativeMessaging"],
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["contentScript.js"],
+      "run_at": "document_end"
+    }
+  ],
   "background": {
     "service_worker": "background.js"
   },
