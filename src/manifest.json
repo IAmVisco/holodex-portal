@@ -4,7 +4,7 @@
   "description": "Quickly jump from current YouTube video or channel to Holodex website!",
   "manifest_version": 3,
 
-  "permissions": ["activeTab", "storage", "alarms", "nativeMessaging"],
+  "permissions": ["activeTab", "storage", "alarms"],
   "content_scripts": [
     {
       "matches": ["*://*.youtube.com/*"],
